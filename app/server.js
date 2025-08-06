@@ -100,6 +100,12 @@ http
           res.end();
           return;
         }
+        if (dataObject.type == "getRoleList") {
+          console.log("getRoleList");
+          roleListRetliever(dataObject);
+          res.end();
+          return;
+        }
         if (dataObject.type == "finish") {
           console.log("ponnpoko:" + dataObject.type);
           let userId = String(dataObject.userID);
@@ -359,7 +365,7 @@ async function meiboAudit_bulk(obj, stampArr, answerArr, roleArr) {
     try {
       channelID = String(stampArr[i][0]);
       messageID = String(stampArr[i][1]).replace(
-        String(obj.serverURL) + String(stampArr[i][0]),
+        String(obj.serverURL) + String(stampArr[i][0]) + "/",
         ""
       );
       channel = client.channels.cache.get(String(channelID));
@@ -496,9 +502,14 @@ async function memberListRetliever(obj) {
   }
   let memberList = await memberListExtracter(guildID);
   let res;
+  let userNameList = [];
+  for(let i = 0; i < memberList.length; i++){
+    userNameList.push(memberList[i][1].user.username);
+  }
   let p1 = {
     obj: obj,
     memberList: memberList,
+    userNameList: userNameList,
   };
   //メンバーリスト返信
   try {
@@ -528,7 +539,7 @@ async function roleListRetliever(obj) {
     obj: obj,
     roleList: roleList,
   };
-  //メンバーリスト返信
+  //ロールリスト返信
   try {
     let req = JSON.stringify({
       p1: p1,
