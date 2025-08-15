@@ -30,8 +30,16 @@ const client = new Client({
 });
 client.commands = new Collection();
 
+let startTime = null,
+  cLdTimeoutID = null;
+
 http
   .createServer(function (req, res) {
+    startTime = new Date().getTime();
+    if (cLdTimeoutID != null) {
+      clearTimeout(cLdTimeoutID);
+    }
+    cLdTimeoutID = setTimeout(cLdestroy, 15 * 60 * 1000);
     if (req.method == "POST") {
       var data = "";
       req.on("data", function (chunk) {
@@ -166,12 +174,48 @@ client.once(Events.ClientReady, (c) => {
   client.user.setPresence({ activities: [{ name: "ゲーム補佐" }] });
 });
 
+client.on("debug", (c) => {
+  console.log("▼▼debugによる情報▼▼\n" + c);
+});
+
+client.on("warn", (c) => {
+  console.log("▼▼warnによる情報▼▼\n" + c);
+});
+
+client.on("error", (c) => {
+  console.log("▼▼errorによる情報▼▼\n" + c);
+});
+
+client.on("ratelimit", (c) => {
+  console.log(c);
+});
+
 if (process.env.OPERAS == undefined) {
   console.log("OPERASが設定されていません。");
   process.exit(0);
 }
 
 client.login(process.env.OPERAS);
+
+//15分でログアウト
+function cLdestroy() {
+  let nowTime = new Date().getTime();
+  if (nowTime >= startTime + 15 * 60 * 1000) {
+    console.log(
+      "▼▼cLdestroy▼▼\n最後のリクエストから" +
+        String((nowTime - startTime) / 60000) +
+        "分経過" +
+        "\nDiscord APIとの接続を終えます",
+    );
+    client.destroy();
+  } else {
+    console.log(
+      "▼▼cLdestroy▼▼\n最後のリクエストから" +
+        String((nowTime - startTime) / 60000) +
+        "分経過",
+    );
+  }
+}
 
 //投稿に基づく事務管理
 async function meiboAudit_master(dataObject) {
